@@ -3,7 +3,7 @@
 set -eou pipefail
 
 show_help() {
-    echo "/ok-to-test ref=e2e_repo_tag_or_branch_default_master k8s=(*|comma separated versions) db=*** versions=comma_separated_versions profiles=comma_separated_profiles tls"
+    echo "/ok-to-test ref=e2e_repo_tag_or_branch_default_master k8s=(*|comma separated versions) db=*** versions=comma_separated_versions profiles=comma_separated_profiles ssl"
 }
 
 k8sVersions=(v1.14.10 v1.16.9 v1.18.8 v1.19.1)
@@ -44,7 +44,7 @@ fi
 declare -a versions=()
 target=
 profiles='all'
-tls=('false')
+ssl=('false')
 
 oldIFS=$IFS
 IFS=' '
@@ -89,11 +89,11 @@ for ((i = 0; i < ${#COMMENT[@]}; i++)); do
             profiles=$(echo $entry | sed -e 's/^[^=]*=//g')
             ;;
 
-        tls*)
+        ssl*)
             v=$(echo $entry | sed -e 's/^[^=]*=//g')
             oldIFS=$IFS
             IFS=','
-            read -ra tls <<<"$v"
+            read -ra ssl <<<"$v"
             IFS=$oldIFS
             ;;
 
@@ -134,19 +134,23 @@ echo "db = $db"
 echo "versions = ${versions[@]}"
 echo "target = $target"
 echo "profiles = ${profiles}"
-echo "tls = ${tls[@]}"
+echo "ssl = ${ssl[@]}"
 
 matrix=()
 for k in ${k8s[@]}; do
     for v in ${versions[@]}; do
-        for t in ${tls[@]}; do
-            matrix+=($(jq -n -c --arg k "$k" --arg d "$db" --arg v "$v" --arg g "$target" --arg p "$profiles" --arg t "$t" '{"k8s":$k,"db":$d,"version":$v,"target":$g,"profiles":$p,"tls":$t}'))
+        for s in ${ssl[@]}; do
+            matrix+=($(jq -n -c --arg k "$k" --arg d "$db" --arg v "$v" --arg t "$target" --arg p "$profiles" --arg s "$s" '{"k8s":$k,"db":$d,"version":$v,"target":$t,"profiles":$p,"ssl":$s}'))
         done
     done
 done
 
 # https://stackoverflow.com/a/63046305/244009
-function join { local IFS="$1"; shift; echo "$*"; }
+function join() {
+    local IFS="$1"
+    shift
+    echo "$*"
+}
 matrix=$(echo '{"include":['$(join , ${matrix[@]})']}')
 # echo $matrix
 echo "::set-output name=matrix::$matrix"
