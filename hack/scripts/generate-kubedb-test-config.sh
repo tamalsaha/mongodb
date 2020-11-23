@@ -140,7 +140,7 @@ matrix=()
 for k in ${k8s[@]}; do
     for v in ${versions[@]}; do
         for t in ${tls[@]}; do
-            matrix+=( $(jq -n -c --arg k "$k" --arg d "$db" --arg v "$v" --arg g "$target" --arg p "$profiles" --arg t "$t" '{"k8s":$k,"db":$d,"version":$v,"target":$g,"profiles":$p,"tls":$t}') )
+            matrix+=($(jq -n -c --arg k "$k" --arg d "$db" --arg v "$v" --arg g "$target" --arg p "$profiles" --arg t "$t" '{"k8s":$k,"db":$d,"version":$v,"target":$g,"profiles":$p,"tls":$t}'))
         done
     done
 done
@@ -151,4 +151,3 @@ matrix=$(echo '{"include":['$(join , ${matrix[@]})']}')
 # echo $matrix
 echo "::set-output name=matrix::$matrix"
 echo "::set-output name=e2e_ref::$ref"
-
