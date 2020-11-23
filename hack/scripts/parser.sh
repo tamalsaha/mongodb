@@ -45,7 +45,7 @@ fi
 
 declare -a versions=()
 profiles='all'
-tls='false'
+tls=('true' 'false')
 
 for ((i = 0; i < ${#COMMENT[@]}; i++)); do
     entry="${COMMENT[$i]}"
@@ -79,8 +79,14 @@ for ((i = 0; i < ${#COMMENT[@]}; i++)); do
             profiles=$(echo $entry | sed -e 's/^[^=]*=//g')
             ;;
 
-        tls)
-            tls='true'
+        tls*)
+            v=$(echo $entry | sed -e 's/^[^=]*=//g')
+            if [ $v == 'true' ]; then
+                tls=( 'true' )
+            fi
+            if [ $v == 'false' ]; then
+                tls=( 'false' )
+            fi
             ;;
 
         *)
@@ -126,8 +132,10 @@ echo "tls=${tls}"
 matrix=()
 for k in ${k8s[@]}; do
     for v in ${versions[@]}; do
-        echo "+++++++++++++++++>>> " $v
-        matrix+=($(jq -n -c --arg k "$k" --arg d "$db" --arg v "$v" --arg p "$profiles" --arg t "$tls" '{"k8s":$k,"db":$d,"version":$v,"profiles":$p,"tls":$t}'))
+        for t in ${tls[@]}; do
+            echo "+++++++++++++++++>>> " $v
+            matrix+=($(jq -n -c --arg k "$k" --arg d "$db" --arg v "$v" --arg p "$profiles" --arg t "$t" '{"k8s":$k,"db":$d,"version":$v,"profiles":$p,"tls":$t}'))
+        done
     done
 done
 
