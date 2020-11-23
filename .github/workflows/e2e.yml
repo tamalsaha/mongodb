@@ -32,5 +32,6 @@ jobs:
           echo "k8s=${{ matrix.k8s }}"
           echo "db=${{ matrix.db }}"
           echo "version=${{ matrix.version }}"
+          echo "target=${{ matrix.target }}"
           echo "profiles=${{ matrix.profiles }}"
           echo "tls=${{ matrix.tls }}"
