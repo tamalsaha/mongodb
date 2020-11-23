@@ -24,6 +24,8 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.config.outputs.matrix) }}
     steps:
+      - uses: actions/checkout@v1
+
       - name: Print
         run: |
           echo "ref=${{ needs.config.outputs.e2e_ref }}"
