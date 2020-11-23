@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eou pipefail
+set -xeou pipefail
 
 show_help() {
     echo "/ok-to-test ref=e2e_repo_tag_or_branch_default_master k8s=(*|comma separated versions) db=*** versions=comma_separated_versions profiles=comma_separated_profiles tls"
