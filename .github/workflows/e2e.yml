@@ -12,6 +12,8 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       e2e_ref: ${{ steps.set-matrix.outputs.e2e_ref }}
     steps:
+      - uses: actions/checkout@v1
+
       - id: set-matrix
         name: Generate test matrix
         run: |
@@ -24,8 +26,6 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.config.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v1
-
       - name: Print
         run: |
           echo "ref=${{ needs.config.outputs.e2e_ref }}"
