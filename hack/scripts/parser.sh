@@ -20,6 +20,7 @@ proxysqlVersions=(2.0.4)
 redisVersions=(5.0.3-v1 4.0.11 4.0.6-v2)
 
 declare -A CATALOG
+# store array as a comma separated string as map value
 CATALOG['elasticsearch']=$(echo ${elasticsearchVersions[@]})
 CATALOG['mariadb']=$(echo ${mariadbVersions[@]})
 CATALOG['memcached']=$(echo ${memcachedVersions[@]})
@@ -31,21 +32,22 @@ CATALOG['postgres']=$(echo ${postgresVersions[@]})
 CATALOG['proxysql']=$(echo ${proxysqlVersions[@]})
 CATALOG['redis']=$(echo ${redisVersions[@]})
 
-IFS=' '
-read -ra COMMENT <<<"$@"
-
 declare -a k8s=()
 ref='master'
+# detect db from git repo name, if name is not a key in CATALOG, set it to blank
 db=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}
 if [ ${CATALOG[$db]+_} ]; then
-    echo "Running test for $db";
+    echo "Running test for $db"
 else
     db=
 fi
-
 declare -a versions=()
+target=
 profiles='all'
-tls=('true' 'false')
+tls=('false')
+
+IFS=' '
+read -ra COMMENT <<<"$@"
 
 for ((i = 0; i < ${#COMMENT[@]}; i++)); do
     entry="${COMMENT[$i]}"
@@ -75,18 +77,18 @@ for ((i = 0; i < ${#COMMENT[@]}; i++)); do
             read -ra versions <<<"$v"
             ;;
 
+        target*)
+            target=$(echo $entry | sed -e 's/^[^=]*=//g')
+            ;;
+
         profiles*)
             profiles=$(echo $entry | sed -e 's/^[^=]*=//g')
             ;;
 
         tls*)
             v=$(echo $entry | sed -e 's/^[^=]*=//g')
-            if [ $v == 'true' ]; then
-                tls=( 'true' )
-            fi
-            if [ $v == 'false' ]; then
-                tls=( 'false' )
-            fi
+            IFS=','
+            read -ra tls <<<"$v"
             ;;
 
         *)
@@ -98,24 +100,20 @@ done
 
 if [ -z "$db" ]; then
     echo "missing db=*** parameter"
-    exit 1;
+    exit 1
 fi
 
 if [ ${#k8s[@]} -eq 0 ] || [ ${k8s[0]} == "*" ]; then
+    # assign array to a variable
     k8s=("${k8sVersions[@]}")
-    # echo ${k8s[@]}
-    # echo ${#k8s[@]}
-    # echo "~~~~~~~~~~~~~"
 fi
 
 # https://wiki.nix-pro.com/view/BASH_associative_arrays#Check_if_key_exists
 if [ ${CATALOG[$db]+_} ]; then
     if [ ${#versions[@]} -eq 0 ] || [ ${versions[0]} == "*" ]; then
+        # convert string back to an array
         IFS=' '
         read -ra versions <<<"${CATALOG[$db]}"
-        # echo ${versions[@]}
-        # echo ${#versions[@]}
-        # echo "**************"
     fi
 else
     echo "Unknonwn database: $s"
@@ -126,6 +124,7 @@ echo "ref = $ref"
 echo "k8s = ${k8s[@]}"
 echo "db = $db"
 echo "versions = ${versions[@]}"
+echo "target = $target"
 echo "profiles = ${profiles}"
 echo "tls=${tls[@]}"
 
@@ -133,15 +132,10 @@ matrix=()
 for k in ${k8s[@]}; do
     for v in ${versions[@]}; do
         for t in ${tls[@]}; do
-            echo "+++++++++++++++++>>> " $v
-            matrix+=($(jq -n -c --arg k "$k" --arg d "$db" --arg v "$v" --arg p "$profiles" --arg t "$t" '{"k8s":$k,"db":$d,"version":$v,"profiles":$p,"tls":$t}'))
+            matrix+=($(jq -n -c --arg k "$k" --arg d "$db" --arg v "$v" --arg g "$target" --arg p "$profiles" --arg t "$t" '{"k8s":$k,"db":$d,"version":$v,"target":$g,"profiles":$p,"tls":$t}'))
         done
     done
 done
-
-echo "_____________________________"
-echo "_____________________________"
-echo "_____________________________"
 
 # https://stackoverflow.com/a/63046305/244009
 function join { local IFS="$1"; shift; echo "$*"; }
