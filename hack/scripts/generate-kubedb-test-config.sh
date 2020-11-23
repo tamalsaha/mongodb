@@ -46,8 +46,10 @@ target=
 profiles='all'
 tls=('false')
 
+oldIFS=$IFS
 IFS=' '
 read -ra COMMENT <<<"$@"
+IFS=$oldIFS
 
 for ((i = 0; i < ${#COMMENT[@]}; i++)); do
     entry="${COMMENT[$i]}"
@@ -61,8 +63,10 @@ for ((i = 0; i < ${#COMMENT[@]}; i++)); do
 
         k8s*)
             v=$(echo $entry | sed -e 's/^[^=]*=//g')
+            oldIFS=$IFS
             IFS=','
             read -ra k8s <<<"$v"
+            IFS=$oldIFS
             ;;
 
         db*)
@@ -71,8 +75,10 @@ for ((i = 0; i < ${#COMMENT[@]}; i++)); do
 
         versions*)
             v=$(echo $entry | sed -e 's/^[^=]*=//g')
+            oldIFS=$IFS
             IFS=','
             read -ra versions <<<"$v"
+            IFS=$oldIFS
             ;;
 
         target*)
@@ -85,8 +91,10 @@ for ((i = 0; i < ${#COMMENT[@]}; i++)); do
 
         tls*)
             v=$(echo $entry | sed -e 's/^[^=]*=//g')
+            oldIFS=$IFS
             IFS=','
             read -ra tls <<<"$v"
+            IFS=$oldIFS
             ;;
 
         *)
@@ -110,8 +118,10 @@ fi
 if [ ${CATALOG[$db]+_} ]; then
     if [ ${#versions[@]} -eq 0 ] || [ ${versions[0]} == "*" ]; then
         # convert string back to an array
+        oldIFS=$IFS
         IFS=' '
         read -ra versions <<<"${CATALOG[$db]}"
+        IFS=$oldIFS
     fi
 else
     echo "Unknonwn database: $s"
@@ -126,7 +136,6 @@ echo "target = $target"
 echo "profiles = ${profiles}"
 echo "tls = ${tls[@]}"
 
-IFS=
 matrix=()
 for k in ${k8s[@]}; do
     for v in ${versions[@]}; do
