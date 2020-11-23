@@ -18,7 +18,7 @@ jobs:
         name: Generate test matrix
         run: |
           bash --version
-          ./hack/scripts/parser.sh
+          ./hack/scripts/parser.sh "${{ github.event.comment.body }}"
 
   kubernetes:
     name: Kubernetes
