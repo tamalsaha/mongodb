@@ -3,13 +3,7 @@
 set -eou pipefail
 
 show_help() {
-    echo "update-docker.sh [options]"
-    echo " "
-    echo "options:"
-    echo "-h, --help                       show brief help"
-    echo "    --tools-only                 update only database-tools images"
-    echo "    --exporter-only              update only database-exporter images"
-    echo "    --operator-only              update only operator image"
+    echo "/ok-to-test ref=e2e_repo_tag_or_branch_default_master k8s=(*|comma separated versions) db=*** versions=comma_separated_versions profiles=comma_separated_profiles tls"
 }
 
 k8sVersions=(v1.14.10 v1.16.9 v1.18.8 v1.19.1)
@@ -95,6 +89,11 @@ for ((i = 0; i < ${#COMMENT[@]}; i++)); do
             ;;
     esac
 done
+
+if [ -z "$db" ]; then
+    echo "missing db=*** parameter"
+    exit 1;
+fi
 
 if [ ${#k8s[@]} -eq 0 ] || [ ${k8s[0]} == "*" ]; then
     k8s=("${k8sVersions[@]}")
