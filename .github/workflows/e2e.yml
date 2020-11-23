@@ -1,0 +1,34 @@
+name: e2e
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  config:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.html_url, '/pull/') && startsWith(github.event.comment.body, '/ok-to-test')
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      e2e_ref: ${{ steps.set-matrix.outputs.e2e_ref }}
+    steps:
+      - id: set-matrix
+        name: Generate test matrix
+        run: |
+          ./hack/scripts/parser.sh
+
+  kubernetes:
+    name: Kubernetes
+    needs: config
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.config.outputs.matrix) }}
+    steps:
+      - name: Print
+        run: |
+          echo "ref=${{ needs.config.outputs.e2e_ref }}"
+          echo "k8s=${{ matrix.k8s }}"
+          echo "db=${{ matrix.db }}"
+          echo "version=${{ matrix.version }}"
+          echo "profiles=${{ matrix.profiles }}"
+          echo "tls=${{ matrix.tls }}"
