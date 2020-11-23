@@ -127,7 +127,7 @@ echo "k8s = ${k8s[@]}"
 echo "db = $db"
 echo "versions = ${versions[@]}"
 echo "profiles = ${profiles}"
-echo "tls=${tls}"
+echo "tls=${tls[@]}"
 
 matrix=()
 for k in ${k8s[@]}; do
