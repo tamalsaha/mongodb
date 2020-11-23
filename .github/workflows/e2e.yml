@@ -17,6 +17,7 @@ jobs:
       - id: set-matrix
         name: Generate test matrix
         run: |
+          bash --version
           ./hack/scripts/parser.sh
 
   kubernetes:
